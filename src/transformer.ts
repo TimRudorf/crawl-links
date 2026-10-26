@@ -168,6 +168,20 @@ export const CrawlLinks: QuartzTransformerPlugin<Partial<CrawlLinksOptions>> = (
                   node.properties.src = dest;
                 }
               }
+
+              // SVG embeds (![[file.svg]]) are emitted as <object data="…">, resolve them like src
+              if (
+                node.tagName === "object" &&
+                node.properties &&
+                typeof node.properties.data === "string" &&
+                !isAbsoluteUrlWithOptions(node.properties.data, { httpOnly: false })
+              ) {
+                node.properties.data = transformLink(
+                  fileSlug,
+                  node.properties.data as RelativeURL,
+                  transformOptions,
+                );
+              }
             });
 
             const frontmatterLinks = (file.data.frontmatterLinks as string[] | undefined) ?? [];
